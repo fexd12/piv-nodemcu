@@ -1,8 +1,6 @@
 #include <HTTPClient.h>
 #include <Arduino.h>
 #include "parson.h"
-#include "AzureIotHub.h"
-#include "Esp32MQTTClient.h"
 #include <WiFi.h>
 #include <SPI.h>
 #include <MFRC522.h>
@@ -11,9 +9,9 @@
 #define RST_PIN 22 // pin rfid
 #define SS_PIN 21 // pin rfid
 
-String BASE_URL = "http://192.168.0.40:3000/";
+String BASE_URL = "https://backendpiv.azurewebsites.net/";
 
-const char *ssid = "Fe";
+char *ssid = "Fe";
 const char *password = "q1w2e3r4t5";
 
 MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522 instance.

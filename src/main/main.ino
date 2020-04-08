@@ -9,7 +9,7 @@
 #define RST_PIN 22 // pin rfid
 #define SS_PIN 21 // pin rfid
 
-String BASE_URL = "https://backendpiv.azurewebsites.net/";
+String BASE_URL = "http://192.168.0.28:3000/";
 
 char *ssid = "Fe";
 const char *password = "q1w2e3r4t5";
@@ -29,6 +29,12 @@ WiFiClient client;
 HTTPClient http;
 
 void dump_byte_array(byte *buffer, byte bufferSize);
+
+void httpRequest(String path, String tag);
+String PostTag(String path,String tag);
+void httpGetAgendamento(String path);
+String GetAgendamento(String path);
+
 void setup(){
 	Serial.begin(115200); // Initialize serial communications with the PC
 
@@ -85,14 +91,14 @@ void loop(){
 	b.toUpperCase();
 	c.toUpperCase();
 	d.toUpperCase();
-  String tag = String(a)+String(b)+String(c)+String(d);
+	String tag = String(a)+String(b)+String(c)+String(d);
 	//Data sending
 	httpRequest("tag",tag);
+	httpGetAgendamento("agendamento");
 }
 
-void httpRequest(String path, String tag)
-{
-  String payload = makeRequest(path,tag);
+void httpRequest(String path, String payload){
+  String payload = PostTag(path,payload);
 
   if (!payload) {
     return;
@@ -102,12 +108,11 @@ void httpRequest(String path, String tag)
 
 }
 
-String makeRequest(String path,String tag)
-{
+String PostTag(String path,String payload){
   http.begin(BASE_URL + path);
   http.addHeader("content-type", "application/x-www-form-urlencoded");
 
-  String body = "tag="+tag;
+  String body = "tag="+payload;
 
   int httpCode = http.POST(body);
 
@@ -126,6 +131,38 @@ String makeRequest(String path,String tag)
 
   return response;
 }
+
+void httpGetAgendamento(String path){
+  String payload = GetAgendamento(path);
+
+  if (!payload) {
+    return;
+  }
+
+  Serial.println("##[RESULT]## ==> " + payload);
+
+}
+
+String GetAgendamento(String path){
+	http.begin(BASE_URL + path);
+	int http = http.GET();
+
+	if (httpCode < 0) {
+    Serial.println("request error - " + httpCode);
+    return "error";
+
+  }
+
+  if (httpCode != HTTP_CODE_OK) {
+    return "";
+  }
+
+  String response =  http.getString();
+  http.end();
+
+  return response;
+}
+
 // Helper routine to dump a byte array as hex values to Serial
 void dump_byte_array(byte *buffer, byte bufferSize){
 	for (byte i = 0; i < bufferSize; i++){

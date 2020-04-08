@@ -128,7 +128,7 @@ void leituraDados(){
 	
 	String tag = String(a)+String(b)+String(c)+String(d);
 
-	char response = httpGetAgendamento("agendamento?tag=" +tag);
+	httpGetAgendamento("agendamento?tag=" +tag);
 }
 
 void GravaDados(){

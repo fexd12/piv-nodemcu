@@ -30,11 +30,6 @@ HTTPClient http;
 
 void dump_byte_array(byte *buffer, byte bufferSize);
 
-void httpRequest(String path, String tag);
-String PostTag(String path,String tag);
-void httpGetAgendamento(String path);
-String GetAgendamento(String path);
-
 void setup(){
 	Serial.begin(115200); // Initialize serial communications with the PC
 
@@ -61,7 +56,7 @@ void setup(){
 }
 
 void loop(){
-	//Connection to server
+
 
 	// Look for new cards
 	if (!mfrc522.PICC_IsNewCardPresent()){
@@ -73,8 +68,47 @@ void loop(){
 		delay(50);
 		return;
 	}
+
+	int opcao= menu();
+
+	if(opcao == 0){
+		leituraDados();
+	}
+	else if(opcao == 1){
+		GravaDados();
+	}
+	else{
+		Serial.println('Opcao incorreta');
+		return;
+	}
+	
+
 	// Show some details of the PICC (that is: the tag/card)
-	Serial.print(F("Card UID:"));
+	// Serial.print(F("Card UID:"));
+	// dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
+	// Serial.println();
+
+	// data = mfrc522.uid.uidByte, mfrc522.uid.size;
+	// for (int i = 0; i < 4; i++){
+	// 	Serial.print(data[i], HEX);
+	// }
+	// a = String(data[0], HEX);
+	// b = String(data[1], HEX);
+	// c = String(data[2], HEX);
+	// d = String(data[3], HEX);
+
+	// a.toUpperCase();
+	// b.toUpperCase();
+	// c.toUpperCase();
+	// d.toUpperCase();
+	// String tag = String(a)+String(b)+String(c)+String(d);
+	// //Data sending
+	// httpRequest("tag",tag);
+	// httpGetAgendamento("agendamento?tag=" +tag);
+}
+
+void leituraDados(){
+	Serial.print("Card UID:");
 	dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
 	Serial.println();
 
@@ -91,10 +125,48 @@ void loop(){
 	b.toUpperCase();
 	c.toUpperCase();
 	d.toUpperCase();
+	
 	String tag = String(a)+String(b)+String(c)+String(d);
-	//Data sending
-	httpRequest("tag",tag);
+
 	httpGetAgendamento("agendamento?tag=" +tag);
+}
+
+void GravaDados(){
+	Serial.print("Card UID:");
+	dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
+	Serial.println();
+
+	data = mfrc522.uid.uidByte, mfrc522.uid.size;
+	for (int i = 0; i < 4; i++){
+		Serial.print(data[i], HEX);
+	}
+	a = String(data[0], HEX);
+	b = String(data[1], HEX);
+	c = String(data[2], HEX);
+	d = String(data[3], HEX);
+
+	a.toUpperCase();
+	b.toUpperCase();
+	c.toUpperCase();
+	d.toUpperCase();
+	
+	String tag = String(a)+String(b)+String(c)+String(d);
+	httpRequest("tag",tag);
+}
+
+int menu(){
+	Serial.println(F("\nEscolha uma opcao:"));
+	Serial.println(F("0 - leitura da Tag"));
+	Serial.println(F("1 - Salva Tag no banco"));
+
+	while(!Serial.available()){}
+
+	int op = (int)Serial.read();
+	while(Serial.available()){
+		if (Serial.read()=='\n')break;
+		Serial.read();	
+	}
+	return (op-48);
 }
 
 void httpRequest(String path, String payload){

@@ -98,13 +98,13 @@ void loop(){
 }
 
 void httpRequest(String path, String payload){
-  String payload = PostTag(path,payload);
+  String dados = PostTag(path,payload);
 
-  if (!payload) {
+  if (!dados) {
     return;
   }
 
-  Serial.println("##[RESULT]## ==> " + payload);
+  Serial.println("##[RESULT]## ==> " + dados);
 
 }
 
@@ -145,7 +145,7 @@ void httpGetAgendamento(String path){
 
 String GetAgendamento(String path){
 	http.begin(BASE_URL + path);
-	int http = http.GET();
+	int httpCode = http.GET();
 
 	if (httpCode < 0) {
     Serial.println("request error - " + httpCode);

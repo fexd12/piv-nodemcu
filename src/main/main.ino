@@ -94,7 +94,7 @@ void loop(){
 	String tag = String(a)+String(b)+String(c)+String(d);
 	//Data sending
 	httpRequest("tag",tag);
-	httpGetAgendamento("agendamento");
+	httpGetAgendamento("agendamento?tag=" +tag);
 }
 
 void httpRequest(String path, String payload){
@@ -133,13 +133,13 @@ String PostTag(String path,String payload){
 }
 
 void httpGetAgendamento(String path){
-  String payload = GetAgendamento(path);
+  String dados = GetAgendamento(path);
 
-  if (!payload) {
+  if (!dados) {
     return;
   }
 
-  Serial.println("##[RESULT]## ==> " + payload);
+  Serial.println("##[RESULT]## ==> " + dados);
 
 }
 

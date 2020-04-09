@@ -5,9 +5,10 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <string.h>
+#include <ArduinoJson.h>
 
 #define RST_PIN 22 // pin rfid
-#define SS_PIN 21 // pin rfid
+#define SS_PIN 21  // pin rfid
 
 String BASE_URL = "http://192.168.0.28:3000/";
 
@@ -27,21 +28,28 @@ String d;
 
 WiFiClient client;
 HTTPClient http;
+// typedef struct
+// {
+// 	int id,
+// 		int sala_id, "users_tags_id" : 1, "usuario" : "testees32", "data" : "2020-04-08T03:00:00.000Z", "horario_inicial" : "2020-04-06T22:02:00.000Z", "horario_final" : "2020-04-06T22:08:00.000Z", "tag" : "F36EF27", "acesso" : 1, "sala" : "teste"
+// };
 
 void dump_byte_array(byte *buffer, byte bufferSize);
 
-void setup(){
+void setup()
+{
 	Serial.begin(115200); // Initialize serial communications with the PC
 
 	SPI.begin();		// Init SPI bus
 	mfrc522.PCD_Init(); // Init MFRC522 card
-  
+
 	//for wifi
 	Serial.print("Connecting to ");
 	Serial.println(ssid);
 
 	WiFi.begin(ssid, password);
-	while (WiFi.status() != WL_CONNECTED){
+	while (WiFi.status() != WL_CONNECTED)
+	{
 		delay(500);
 		Serial.print(".");
 	}
@@ -51,37 +59,41 @@ void setup(){
 	Serial.println(WiFi.localIP());
 	Serial.println("Getway: ");
 	Serial.println(WiFi.gatewayIP());
-  
+
 	Serial.println(F("RFID Read: "));
 }
 
-void loop(){
-
+void loop()
+{
 
 	// Look for new cards
-	if (!mfrc522.PICC_IsNewCardPresent()){
+	if (!mfrc522.PICC_IsNewCardPresent())
+	{
 		delay(50);
 		return;
 	}
 	// Select one of the cards
-	if (!mfrc522.PICC_ReadCardSerial()){
+	if (!mfrc522.PICC_ReadCardSerial())
+	{
 		delay(50);
 		return;
 	}
 
-	int opcao= menu();
+	int opcao = menu();
 
-	if(opcao == 0){
+	if (opcao == 0)
+	{
 		leituraDados();
 	}
-	else if(opcao == 1){
+	else if (opcao == 1)
+	{
 		GravaDados();
 	}
-	else{
+	else
+	{
 		Serial.println('Opcao incorreta');
 		return;
 	}
-	
 
 	// Show some details of the PICC (that is: the tag/card)
 	// Serial.print(F("Card UID:"));
@@ -107,13 +119,15 @@ void loop(){
 	// httpGetAgendamento("agendamento?tag=" +tag);
 }
 
-void leituraDados(){
+void leituraDados()
+{
 	Serial.print("Card UID:");
 	dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
 	Serial.println();
 
 	data = mfrc522.uid.uidByte, mfrc522.uid.size;
-	for (int i = 0; i < 4; i++){
+	for (int i = 0; i < 4; i++)
+	{
 		Serial.print(data[i], HEX);
 	}
 	a = String(data[0], HEX);
@@ -125,19 +139,21 @@ void leituraDados(){
 	b.toUpperCase();
 	c.toUpperCase();
 	d.toUpperCase();
-	
-	String tag = String(a)+String(b)+String(c)+String(d);
 
-	httpGetAgendamento("agendamento?tag=" +tag);
+	String tag = String(a) + String(b) + String(c) + String(d);
+
+	httpGetAgendamento("agendamento?tag=" + tag);
 }
 
-void GravaDados(){
+void GravaDados()
+{
 	Serial.print("Card UID:");
 	dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
 	Serial.println();
 
 	data = mfrc522.uid.uidByte, mfrc522.uid.size;
-	for (int i = 0; i < 4; i++){
+	for (int i = 0; i < 4; i++)
+	{
 		Serial.print(data[i], HEX);
 	}
 	a = String(data[0], HEX);
@@ -149,95 +165,129 @@ void GravaDados(){
 	b.toUpperCase();
 	c.toUpperCase();
 	d.toUpperCase();
-	
-	String tag = String(a)+String(b)+String(c)+String(d);
-	httpRequest("tag",tag);
+
+	String tag = String(a) + String(b) + String(c) + String(d);
+	httpRequest("tag", tag);
 }
 
-int menu(){
+int menu()
+{
 	Serial.println(F("\nEscolha uma opcao:"));
 	Serial.println(F("0 - leitura da Tag"));
 	Serial.println(F("1 - Salva Tag no banco"));
 
-	while(!Serial.available()){}
+	while (!Serial.available())
+	{
+	}
 
 	int op = (int)Serial.read();
-	while(Serial.available()){
-		if (Serial.read()=='\n')break;
-		Serial.read();	
+	while (Serial.available())
+	{
+		if (Serial.read() == '\n')
+			break;
+		Serial.read();
 	}
-	return (op-48);
+	return (op - 48);
 }
 
-void httpRequest(String path, String payload){
-  String dados = PostTag(path,payload);
+void httpRequest(String path, String payload)
+{
+	String dados = PostTag(path, payload);
 
-  if (!dados) {
-    return;
-  }
+	if (!dados)
+	{
+		return;
+	}
 
-  Serial.println("##[RESULT]## ==> " + dados);
-
+	Serial.println("##[RESULT]## ==> " + dados);
 }
 
-String PostTag(String path,String payload){
-  http.begin(BASE_URL + path);
-  http.addHeader("content-type", "application/x-www-form-urlencoded");
+String PostTag(String path, String payload)
+{
+	http.begin(BASE_URL + path);
+	http.addHeader("content-type", "application/x-www-form-urlencoded");
 
-  String body = "tag="+payload;
+	String body = "tag=" + payload;
 
-  int httpCode = http.POST(body);
+	int httpCode = http.POST(body);
 
-  if (httpCode < 0) {
-    Serial.println("request error - " + httpCode);
-    return "error";
+	if (httpCode < 0)
+	{
+		Serial.println("request error - " + httpCode);
+		return "error";
+	}
 
-  }
+	if (httpCode != HTTP_CODE_OK)
+	{
+		return "";
+	}
 
-  if (httpCode != HTTP_CODE_OK) {
-    return "";
-  }
+	String response = http.getString();
+	http.end();
 
-  String response =  http.getString();
-  http.end();
-
-  return response;
+	return response;
 }
 
-void httpGetAgendamento(String path){
-  String dados = GetAgendamento(path);
+void httpGetAgendamento(String path)
+{
+	String dados = GetAgendamento(path);
 
-  if (!dados) {
-    return;
-  }
+	if (!dados)
+	{
+		return;
+	}
 
-  Serial.println("##[RESULT]## ==> " + dados);
+	Serial.println("##[RESULT]## ==> " + dados);
 
+	const size_t capacity = JSON_OBJECT_SIZE(10) + JSON_ARRAY_SIZE(2) + 60;
+
+	DynamicJsonDocument doc(capacity);
+
+	// Parse JSON object
+	DeserializationError error = deserializeJson(doc, dados);
+
+	if (error)
+	{
+		Serial.print(F("deserializeJson() failed: "));
+		Serial.println(error.c_str());
+		return;
+	}
+
+	// Extract values
+	Serial.println(F("Response:"));
+	Serial.println(doc["sensor"].as<char *>());
+	Serial.println(doc["time"].as<long>());
+	Serial.println(doc["data"][0].as<float>(), 6);
+	Serial.println(doc["data"][1].as<float>(), 6);
 }
 
-String GetAgendamento(String path){
+String GetAgendamento(String path)
+{
 	http.begin(BASE_URL + path);
 	int httpCode = http.GET();
 
-	if (httpCode < 0) {
-    Serial.println("request error - " + httpCode);
-    return "error";
+	if (httpCode < 0)
+	{
+		Serial.println("request error - " + httpCode);
+		return "error";
+	}
 
-  }
+	if (httpCode != HTTP_CODE_OK)
+	{
+		return "";
+	}
 
-  if (httpCode != HTTP_CODE_OK) {
-    return "";
-  }
+	String response = http.getString();
+	http.end();
 
-  String response =  http.getString();
-  http.end();
-
-  return response;
+	return response;
 }
 
 // Helper routine to dump a byte array as hex values to Serial
-void dump_byte_array(byte *buffer, byte bufferSize){
-	for (byte i = 0; i < bufferSize; i++){
+void dump_byte_array(byte *buffer, byte bufferSize)
+{
+	for (byte i = 0; i < bufferSize; i++)
+	{
 		//Serial.print(buffer[i] < 0x10 ? " 0" : " ");
 		Serial.print(buffer[i], HEX);
 	}

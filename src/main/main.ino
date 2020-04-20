@@ -9,6 +9,9 @@
 
 #define RST_PIN 22 // pin rfid
 #define SS_PIN 21  // pin rfid
+#define rele1 23
+#define rele2 24
+
 
 String BASE_URL = "http://192.168.0.28:3000/";
 
@@ -42,6 +45,8 @@ void setup()
 
   SPI.begin();		// Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522 card
+  pinMode(rele1, OUTPUT);
+  pinMode(rele2, OUTPUT);
 
   //for wifi
   Serial.print("Connecting to ");
@@ -60,7 +65,7 @@ void setup()
   Serial.println("Getway: ");
   Serial.println(WiFi.gatewayIP());
 
-  Serial.println(F("RFID Read: "));
+  Serial.println(F("Inserir RFID: "));
 }
 
 void loop()
@@ -230,7 +235,7 @@ String PostTag(String path, String payload)
 
 void httpGetAgendamento(String path)
 {
-  String dados = GetAgendamento(path);
+  String dados = Get(path);
 
   if (!dados)
   {
@@ -239,7 +244,7 @@ void httpGetAgendamento(String path)
 
   //Serial.println("##[RESULT]## ==> " + dados);
 
-  const size_t capacity = JSON_OBJECT_SIZE(10) + 210;
+  const size_t capacity = JSON_OBJECT_SIZE(12) + 210;
 
   DynamicJsonDocument doc(capacity);
 
@@ -263,10 +268,44 @@ void httpGetAgendamento(String path)
   const char* tag = doc["tag"];
   int acesso = doc["acesso"];
   const char* sala = doc["sala"];
+  const char* data_atual = doc["data_atual"];
+  const char* hora_atual = doc["hora_atual"];
+
+  if (acesso && data_atual == data && hora_atual == horario_inicial)
+  {
+    delay(500);
+    Serial.println('ligando acesso 1');
+    String hora = Get("hora");
+    while (hora == horario_final)
+    {
+      digitalWrite(rele1, HIGH);
+      digitalWrite(rele2, HIGH);
+      delay(900000);//15 minutos para cada requisicao
+      hora = Get("hora");
+    }
+    delay(500);
+  }
+  else if (!acesso  && data_atual == data && hora_atual == horario_inicial)
+  {
+    delay(500);
+    Serial.println('ligando acesso 0');
+    String hora = Get("hora");
+    while (hora == horario_final) {
+      digitalWrite(rele1, HIGH);
+      digitalWrite(rele2, LOW);
+      delay(900000);
+      hora = Get("hora");
+    }
+    delay(500);
+  }
+  else
+  {
+    Serial.println('Tag nao possui agendamento.');
+  }
 
 }
 
-String GetAgendamento(String path)
+String Get(String path)
 {
   http.begin(BASE_URL + path);
   int httpCode = http.GET();

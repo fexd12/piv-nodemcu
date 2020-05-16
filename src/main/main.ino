@@ -9,6 +9,7 @@
 
 #define RST_PIN 22 // pin rfid
 #define SS_PIN 21  // pin rfid
+
 #define rele1 23
 #define rele2 24
 
@@ -270,7 +271,10 @@ void httpGetAgendamento(String path)
   const char* sala = doc["sala"];
   const char* data_atual = doc["data_atual"];
   const char* hora_atual = doc["hora_atual"];
-
+  String hora = Get("hora");
+  String hora_antes = hora_atual;
+  Serial.println("hora atual antes validação:" + hora_antes);
+  Serial.println("hora atual depois validação:" + hora);
   if (acesso && data_atual == data && hora_atual == horario_inicial)
   {
     delay(500);
@@ -280,7 +284,7 @@ void httpGetAgendamento(String path)
     {
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, HIGH);
-      delay(900000);//15 minutos para cada requisicao
+      delay(60000);//1 minutos para cada requisicao
       hora = Get("hora");
     }
     delay(500);
@@ -293,14 +297,15 @@ void httpGetAgendamento(String path)
     while (hora == horario_final) {
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, LOW);
-      delay(900000);
+      delay(60000);//1 minutos
       hora = Get("hora");
     }
     delay(500);
   }
   else
   {
-    Serial.println('Tag nao possui agendamento.');
+    Serial.println("Tag fora do periodo de agendamento.");
+
   }
 
 }

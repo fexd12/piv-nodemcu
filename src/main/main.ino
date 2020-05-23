@@ -13,8 +13,7 @@
 #define rele1 23
 #define rele2 24
 
-
-String BASE_URL = "http://192.168.0.28:3000/";
+String BASE_URL = "";
 
 char *ssid = "Fe";
 const char *password = "q1w2e3r4t5";
@@ -32,11 +31,6 @@ String d;
 
 WiFiClient client;
 HTTPClient http;
-// typedef struct
-// {
-// 	int id,
-// 		int sala_id, "users_tags_id" : 1, "usuario" : "testees32", "data" : "2020-04-08T03:00:00.000Z", "horario_inicial" : "2020-04-06T22:02:00.000Z", "horario_final" : "2020-04-06T22:08:00.000Z", "tag" : "F36EF27", "acesso" : 1, "sala" : "teste"
-// };
 
 void dump_byte_array(byte *buffer, byte bufferSize);
 
@@ -44,7 +38,7 @@ void setup()
 {
   Serial.begin(115200); // Initialize serial communications with the PC
 
-  SPI.begin();		// Init SPI bus
+  SPI.begin();        // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522 card
   pinMode(rele1, OUTPUT);
   pinMode(rele2, OUTPUT);
@@ -262,42 +256,54 @@ void httpGetAgendamento(String path)
   int id = doc["id"];
   int sala_id = doc["sala_id"];
   int users_tags_id = doc["users_tags_id"];
-  const char* usuario = doc["usuario"];
-  const char* data = doc["data"];
-  const char* horario_inicial = doc["horario_inicial"];
-  const char* horario_final = doc["horario_final"];
-  const char* tag = doc["tag"];
+  const char *usuario = doc["usuario"];
+  const char *data = doc["data"];
+  const char *horario_inicial = doc["horario_inicial"];
+  String horario_final = doc["horario_final"];
+  const char *tag = doc["tag"];
   int acesso = doc["acesso"];
-  const char* sala = doc["sala"];
-  const char* data_atual = doc["data_atual"];
-  const char* hora_atual = doc["hora_atual"];
+  const char *sala = doc["sala"];
+  const char *data_atual = doc["data_atual"];
+  const char *hora_atual = doc["hora_atual"];
   String hora = Get("hora");
   String hora_antes = hora_atual;
-  Serial.println("hora atual antes validação:" + hora_antes);
-  Serial.println("hora atual depois validação:" + hora);
-  if (acesso && data_atual == data && hora_atual == horario_inicial)
-  {
+  //Serial.println("hora atual antes validação:" + hora_antes);
+  //Serial.println("hora atual depois validação:" + hora);
+
+
+  if (acesso == 1 && data == data_atual && hora_atual == horario_inicial){
     delay(500);
     Serial.println('ligando acesso 1');
-    String hora = Get("hora");
-    while (hora == horario_final)
-    {
+    hora = Get("hora");
+    while (compare(hora,horario_final) == 0){// acesso full
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, HIGH);
-      delay(60000);//1 minutos para cada requisicao
+      if (compare(hora,horario_final) == -1){
+        digitalWrite(rele1, LOW);
+        digitalWrite(rele2, LOW);
+        break;
+      }
+      delay(60000); //1 minutos para cada requisicao
       hora = Get("hora");
     }
     delay(500);
   }
-  else if (!acesso  && data_atual == data && hora_atual == horario_inicial)
+
+  else if (acesso == 0 && data == data_atual && hora_atual == horario_inicial)
   {
     delay(500);
     Serial.println('ligando acesso 0');
-    String hora = Get("hora");
-    while (hora == horario_final) {
+    hora = Get("hora");
+    while (compare(hora,horario_final) == 0)
+    {
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, LOW);
-      delay(60000);//1 minutos
+      if (compare(hora,horario_final) == -1){
+        digitalWrite(rele1, LOW);
+        digitalWrite(rele2, LOW);
+        break;
+      }
+      delay(60000); //1 minutos
       hora = Get("hora");
     }
     delay(500);
@@ -305,9 +311,7 @@ void httpGetAgendamento(String path)
   else
   {
     Serial.println("Tag fora do periodo de agendamento.");
-
   }
-
 }
 
 String Get(String path)
@@ -340,4 +344,22 @@ void dump_byte_array(byte *buffer, byte bufferSize)
     //Serial.print(buffer[i] < 0x10 ? " 0" : " ");
     Serial.print(buffer[i], HEX);
   }
+}
+int compare(String a,String b){
+  int index = 0;
+  // Enquanto os caracteres forem iguais, corre os vectores.
+  while (a[index] == b[index])
+  {
+    // Verifica se alguma das strings terminou.
+    // Se sim, sai do loop. Caso contrario, analisa o próximo carácter.
+    if (a[index] == '\0' || b[index] == '\0')
+      break;
+    ++index;
+  }
+
+  // Se ambos terminaram, as strings contidas são iguais.
+  if (a[index] == '\0' && b[index] == '\0')
+    return 0;
+  else
+    return -1;
 }

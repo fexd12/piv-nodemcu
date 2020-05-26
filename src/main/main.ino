@@ -217,10 +217,10 @@ String PostTag(String path, String payload)
     return "error";
   }
 
-  if (httpCode != HTTP_CODE_OK)
-  {
-    return "";
-  }
+  // if (httpCode != HTTP_CODE_OK)
+  // {
+  //   return "error";
+  // }
 
   String response = http.getString();
   http.end();
@@ -231,6 +231,7 @@ String PostTag(String path, String payload)
 void httpGetAgendamento(String path)
 {
   String dados = Get(path);
+  Serial.println('Json:'+ dados);
 
   if (!dados)
   {
@@ -244,15 +245,15 @@ void httpGetAgendamento(String path)
   DynamicJsonDocument doc(capacity);
 
   // Parse JSON object
-  DeserializationError error = deserializeJson(doc, dados);
+  deserializeJson(doc, dados);
   JsonObject obj = doc.as<JsonObject>();
 
-  if (error)
-  {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
-    return;
-  }
+  // if (error)
+  // {
+  //   Serial.print(F("deserializeJson() failed: "));
+  //   Serial.println(error.c_str());
+  //   return;
+  // }
 
   int id = obj["id"];
   int sala_id = obj["sala_id"];
@@ -317,24 +318,42 @@ void httpGetAgendamento(String path)
 
 String Get(String path)
 {
-  http.begin(BASE_URL + path);
-  int httpCode = http.GET();
+  // http.begin(BASE_URL + path);
+  // int httpCode = http.GET();
 
-  if (httpCode < 0)
-  {
-    Serial.println("request error - " + httpCode);
-    return "error";
+  // if (httpCode < 0)
+  // {
+  //   Serial.println("request error - " + httpCode);
+  //   return "error";
+  // }
+
+  // if (httpCode != HTTP_CODE_OK)
+  // {
+  //   return "";
+  // }
+
+  // String response = http.getString();
+  // http.end();
+
+  // return response;
+
+
+  client.println("GET /" + path + " HTTP/1.1");
+  client.print("Host: ");
+  client.println(BASE_URL);
+  client.println("Connection: close");
+  client.println();
+  while (client.connected()) {
+    //Serial.println("A");
+    String data = client.readStringUntil('\n');
+    //Serial.println(data);
+    if (data == "\r") {
+      break;
+    }
   }
+  String data = client.readStringUntil('\n');
+  return data;
 
-  if (httpCode != HTTP_CODE_OK)
-  {
-    return "";
-  }
-
-  String response = http.getString();
-  http.end();
-
-  return response;
 }
 
 // Helper routine to dump a byte array as hex values to Serial

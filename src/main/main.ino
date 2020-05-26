@@ -245,6 +245,7 @@ void httpGetAgendamento(String path)
 
   // Parse JSON object
   DeserializationError error = deserializeJson(doc, dados);
+  JsonObject obj = doc.as<JsonObject>();
 
   if (error)
   {
@@ -253,18 +254,18 @@ void httpGetAgendamento(String path)
     return;
   }
 
-  int id = doc["id"];
-  int sala_id = doc["sala_id"];
-  int users_tags_id = doc["users_tags_id"];
-  const char *usuario = doc["usuario"];
-  const char *data = doc["data"];
-  const char *horario_inicial = doc["horario_inicial"];
-  String horario_final = doc["horario_final"];
-  const char *tag = doc["tag"];
-  int acesso = doc["acesso"];
-  const char *sala = doc["sala"];
-  const char *data_atual = doc["data_atual"];
-  const char *hora_atual = doc["hora_atual"];
+  int id = obj["id"];
+  int sala_id = obj["sala_id"];
+  int users_tags_id = obj["users_tags_id"];
+  const char *usuario = obj["usuario"];
+  const char *data = obj["data"];
+  const char *horario_inicial = obj["horario_inicial"];
+  String horario_final = obj["horario_final"];
+  const char *tag = obj["tag"];
+  int acesso = obj["acesso"];
+  const char *sala = obj["sala"];
+  const char *data_atual = obj["data_atual"];
+  const char *hora_atual = obj["hora_atual"];
   String hora = Get("hora");
   String hora_antes = hora_atual;
   //Serial.println("hora atual antes validação:" + hora_antes);

@@ -261,14 +261,20 @@ void httpGetAgendamento(String path)
   const char *usuario = obj["usuario"];
   const char *data = obj["data"];
   const char *horario_inicial = obj["horario_inicial"];
-  String horario_final = obj["horario_final"];
+  const char *horario_final = obj["horario_final"];
   const char *tag = obj["tag"];
   int acesso = obj["acesso"];
   const char *sala = obj["sala"];
   const char *data_atual = obj["data_atual"];
   const char *hora_atual = obj["hora_atual"];
   String hora = Get("hora");
-  String hora_antes = hora_atual;
+
+  const size_t capacity2 = JSON_OBJECT_SIZE(1) + 20;
+  DynamicJsonDocument doc2(capacity2);
+  deserializeJson(doc2, hora);
+  JsonObject obj2 = doc2.as<JsonObject>();
+  const char *hora_parsed = obj2["hora"];
+  // String hora_antes = hora_atual;
   //Serial.println("hora atual antes validação:" + hora_antes);
   //Serial.println("hora atual depois validação:" + hora);
 
@@ -277,16 +283,19 @@ void httpGetAgendamento(String path)
     delay(500);
     Serial.println('ligando acesso 1');
     hora = Get("hora");
-    while (compare(hora,horario_final) == 0){// acesso full
+    hora_parsed = parse(hora);
+    while (strcmp(hora_parsed,horario_final) == 0){// acesso full
+
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, HIGH);
-      if (compare(hora,horario_final) == -1){
+      if (strcmp(hora_parsed,horario_final) > 0){
         digitalWrite(rele1, LOW);
         digitalWrite(rele2, LOW);
         break;
       }
       delay(60000); //1 minutos para cada requisicao
       hora = Get("hora");
+      hora_parsed = parse(hora);
     }
     delay(500);
   }
@@ -296,17 +305,19 @@ void httpGetAgendamento(String path)
     delay(500);
     Serial.println('ligando acesso 0');
     hora = Get("hora");
-    while (compare(hora,horario_final) == 0)
+    hora_parsed = parse(hora);
+    while (strcmp(hora_parsed,horario_final) == 0)
     {
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, LOW);
-      if (compare(hora,horario_final) == -1){
+      if (strcmp(hora_parsed,horario_final) >0){
         digitalWrite(rele1, LOW);
         digitalWrite(rele2, LOW);
         break;
       }
       delay(60000); //1 minutos
       hora = Get("hora");
+      hora_parsed = parse(hora);
     }
     delay(500);
   }
@@ -316,43 +327,51 @@ void httpGetAgendamento(String path)
   }
 }
 
+const char* parse(String obj){ //parse hora
+  const size_t capacity = JSON_OBJECT_SIZE(1) + 20;
+  DynamicJsonDocument doc(capacity);
+  deserializeJson(doc, obj);
+  JsonObject obj3 = doc.as<JsonObject>();
+  const char *hora_parsed = obj3["hora"];
+  return hora_parsed;
+}
+
 String Get(String path)
 {
-  // http.begin(BASE_URL + path);
-  // int httpCode = http.GET();
+  http.begin(BASE_URL + path);
+  int httpCode = http.GET();
 
-  // if (httpCode < 0)
-  // {
-  //   Serial.println("request error - " + httpCode);
-  //   return "error";
-  // }
-
-  // if (httpCode != HTTP_CODE_OK)
-  // {
-  //   return "";
-  // }
-
-  // String response = http.getString();
-  // http.end();
-
-  // return response;
-
-
-  client.println("GET /" + path + " HTTP/1.1");
-  client.print("Host: ");
-  client.println(BASE_URL);
-  client.println("Connection: close");
-  client.println();
-  while (client.connected()) {
-    //Serial.println("A");
-    String data = client.readStringUntil('\n');
-    //Serial.println(data);
-    if (data == "\r") {
-      break;
-    }
+  if (httpCode < 0)
+  {
+    Serial.println("request error - " + httpCode);
+    return "error";
   }
-  String data = client.readStringUntil('\n');
-  return data;
+
+  if (httpCode != HTTP_CODE_OK)
+  {
+    return "";
+  }
+
+  String response = http.getString();
+  http.end();
+
+  return response;
+
+  // client.println("GET /" + path + " HTTP/1.1");
+  // client.print("Host: ");
+  // client.println(BASE_URL);
+  // client.println("Connection: close");
+  // client.println();
+  // while (client.connected()) {
+  //   //Serial.println("A");
+  //   String data = client.readStringUntil('\n');
+  //   //Serial.println(data);
+  //   if (data == "\r") {
+  //     break;
+  //   }
+  // }
+  // String data = client.readStringUntil('\n');
+  // return data;
 
 }
 

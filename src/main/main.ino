@@ -34,6 +34,12 @@ HTTPClient http;
 
 void dump_byte_array(byte *buffer, byte bufferSize);
 
+typedef struct{
+  const char *hora;
+} hora;
+
+hora Hora;
+
 void setup()
 {
   Serial.begin(115200); // Initialize serial communications with the PC
@@ -267,13 +273,6 @@ void httpGetAgendamento(String path)
   const char *sala = obj["sala"];
   const char *data_atual = obj["data_atual"];
   const char *hora_atual = obj["hora_atual"];
-  String hora = Get("hora");
-
-  const size_t capacity2 = JSON_OBJECT_SIZE(1) + 20;
-  DynamicJsonDocument doc2(capacity2);
-  deserializeJson(doc2, hora);
-  JsonObject obj2 = doc2.as<JsonObject>();
-  const char *hora_parsed = obj2["hora"];
   // String hora_antes = hora_atual;
   //Serial.println("hora atual antes validação:" + hora_antes);
   //Serial.println("hora atual depois validação:" + hora);
@@ -282,20 +281,18 @@ void httpGetAgendamento(String path)
   if (acesso == 1 && data == data_atual && hora_atual == horario_inicial){
     delay(500);
     Serial.println('ligando acesso 1');
-    hora = Get("hora");
-    hora_parsed = parse(hora);
-    while (strcmp(hora_parsed,horario_final) == 0){// acesso full
+    Hora = parse();
+    while (strcmp(Hora.hora,horario_final) == 0){// acesso full
 
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, HIGH);
-      if (strcmp(hora_parsed,horario_final) > 0){
+      if (strcmp(Hora.hora,horario_final) > 0){
         digitalWrite(rele1, LOW);
         digitalWrite(rele2, LOW);
         break;
       }
       delay(60000); //1 minutos para cada requisicao
-      hora = Get("hora");
-      hora_parsed = parse(hora);
+      Hora = parse();
     }
     delay(500);
   }
@@ -304,20 +301,18 @@ void httpGetAgendamento(String path)
   {
     delay(500);
     Serial.println('ligando acesso 0');
-    hora = Get("hora");
-    hora_parsed = parse(hora);
-    while (strcmp(hora_parsed,horario_final) == 0)
+    Hora = parse();
+    while (strcmp(Hora.hora,horario_final) == 0)
     {
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, LOW);
-      if (strcmp(hora_parsed,horario_final) >0){
+      if (strcmp(Hora.hora,horario_final) >0){
         digitalWrite(rele1, LOW);
         digitalWrite(rele2, LOW);
         break;
       }
       delay(60000); //1 minutos
-      hora = Get("hora");
-      hora_parsed = parse(hora);
+      Hora = parse();
     }
     delay(500);
   }
@@ -327,13 +322,15 @@ void httpGetAgendamento(String path)
   }
 }
 
-const char* parse(String obj){ //parse hora
-  const size_t capacity = JSON_OBJECT_SIZE(1) + 20;
-  DynamicJsonDocument doc(capacity);
-  deserializeJson(doc, obj);
-  JsonObject obj3 = doc.as<JsonObject>();
-  const char *hora_parsed = obj3["hora"];
-  return hora_parsed;
+hora parse(){ //parse hora
+  hora P;
+  String obj = Get("hora");
+  const size_t size = JSON_OBJECT_SIZE(1) + 20;
+  DynamicJsonDocument document(size);
+  deserializeJson(document, obj);
+  JsonObject obj3 = document.as<JsonObject>();
+  P.hora = obj3["hora"];
+  return P;
 }
 
 String Get(String path)

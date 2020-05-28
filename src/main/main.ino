@@ -237,7 +237,7 @@ String PostTag(String path, String payload)
 void httpGetAgendamento(String path)
 {
   String dados = Get(path);
-  Serial.println('Json:'+ dados);
+  Serial.println(dados);
 
   if (!dados)
   {
@@ -278,48 +278,48 @@ void httpGetAgendamento(String path)
   //Serial.println("hora atual depois validação:" + hora);
 
 
-  if (acesso == 1 && data == data_atual && hora_atual == horario_inicial){
-    delay(500);
-    Serial.println('ligando acesso 1');
-    Hora = parse();
-    while (strcmp(Hora.hora,horario_final) == 0){// acesso full
+  // if (acesso == 1 && data == data_atual && hora_atual == horario_inicial){
+  //   delay(500);
+  //   Serial.println('ligando acesso 1');
+  //   Hora = parse();
+  //   while (strcmp(Hora.hora,horario_final) == 0){// acesso full
 
-      digitalWrite(rele1, HIGH);
-      digitalWrite(rele2, HIGH);
-      if (strcmp(Hora.hora,horario_final) > 0){
-        digitalWrite(rele1, LOW);
-        digitalWrite(rele2, LOW);
-        break;
-      }
-      delay(60000); //1 minutos para cada requisicao
-      Hora = parse();
-    }
-    delay(500);
-  }
+  //     digitalWrite(rele1, HIGH);
+  //     digitalWrite(rele2, HIGH);
+  //     if (strcmp(Hora.hora,horario_final) > 0){
+  //       digitalWrite(rele1, LOW);
+  //       digitalWrite(rele2, LOW);
+  //       break;
+  //     }
+  //     delay(60000); //1 minutos para cada requisicao
+  //     Hora = parse();
+  //   }
+  //   delay(500);
+  // }
 
-  else if (acesso == 0 && data == data_atual && hora_atual == horario_inicial)
-  {
-    delay(500);
-    Serial.println('ligando acesso 0');
-    Hora = parse();
-    while (strcmp(Hora.hora,horario_final) == 0)
-    {
-      digitalWrite(rele1, HIGH);
-      digitalWrite(rele2, LOW);
-      if (strcmp(Hora.hora,horario_final) >0){
-        digitalWrite(rele1, LOW);
-        digitalWrite(rele2, LOW);
-        break;
-      }
-      delay(60000); //1 minutos
-      Hora = parse();
-    }
-    delay(500);
-  }
-  else
-  {
-    Serial.println("Tag fora do periodo de agendamento.");
-  }
+  // else if (acesso == 0 && data == data_atual && hora_atual == horario_inicial)
+  // {
+  //   delay(500);
+  //   Serial.println('ligando acesso 0');
+  //   Hora = parse();
+  //   while (strcmp(Hora.hora,horario_final) == 0)
+  //   {
+  //     digitalWrite(rele1, HIGH);
+  //     digitalWrite(rele2, LOW);
+  //     if (strcmp(Hora.hora,horario_final) >0){
+  //       digitalWrite(rele1, LOW);
+  //       digitalWrite(rele2, LOW);
+  //       break;
+  //     }
+  //     delay(60000); //1 minutos
+  //     Hora = parse();
+  //   }
+  //   delay(500);
+  // }
+  // else
+  // {
+  //   Serial.println("Tag fora do periodo de agendamento.");
+  // }
 }
 
 hora parse(){ //parse hora

@@ -278,7 +278,7 @@ void httpGetAgendamento(String path)
   //Serial.println("hora atual depois validação:" + hora);
 
 
-  if (acesso == 1 && data == data_atual && hora_atual == horario_inicial){
+  if (acesso == 1 && strcmp(data,data_atual) == 0 && strcmp(hora_atual,horario_inicial) == 0){
     delay(500);
     Serial.println('ligando acesso 1');
     Hora = parse();
@@ -297,7 +297,7 @@ void httpGetAgendamento(String path)
     delay(500);
   }
 
-  else if (acesso == 0 && data == data_atual && hora_atual == horario_inicial)
+  else if (acesso == 0 && strcmp(data,data_atual) == 0 && strcmp(hora_atual,horario_inicial) == 0)
   {
     delay(500);
     Serial.println('ligando acesso 0');

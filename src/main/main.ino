@@ -10,10 +10,10 @@
 #define RST_PIN 22 // pin rfid
 #define SS_PIN 21  // pin rfid
 
-#define rele1 23
-#define rele2 24
+#define rele1 26
+#define rele2 27
 
-String BASE_URL = "";
+String BASE_URL = "http://35.247.255.32:3000/";
 
 char *ssid = "Fe";
 const char *password = "q1w2e3r4t5";
@@ -33,12 +33,6 @@ WiFiClient client;
 HTTPClient http;
 
 void dump_byte_array(byte *buffer, byte bufferSize);
-
-typedef struct{
-  const char *hora;
-} hora;
-
-hora Hora;
 
 void setup()
 {
@@ -148,7 +142,7 @@ void leituraDados()
 
   String tag = String(a) + String(b) + String(c) + String(d);
 
-  httpGetAgendamento("agendamento?tag=" + tag);
+  httpGetAgendamento("tag=" + tag);
 }
 
 void GravaDados()
@@ -234,9 +228,9 @@ String PostTag(String path, String payload)
   return response;
 }
 
-void httpGetAgendamento(String path)
+void httpGetAgendamento(String tag)
 {
-  String dados = Get(path);
+  String dados = Get("agendamento?" + tag);
   Serial.println(dados);
 
   if (!dados)
@@ -246,7 +240,7 @@ void httpGetAgendamento(String path)
 
   //Serial.println("##[RESULT]## ==> " + dados);
 
-  const size_t capacity = JSON_OBJECT_SIZE(12) + 210;
+  const size_t capacity = JSON_OBJECT_SIZE(1) + 30;
 
   DynamicJsonDocument doc(capacity);
 
@@ -261,58 +255,43 @@ void httpGetAgendamento(String path)
   //   return;
   // }
 
-  int id = obj["id"];
-  int sala_id = obj["sala_id"];
-  int users_tags_id = obj["users_tags_id"];
-  const char *usuario = obj["usuario"];
-  const char *data = obj["data"];
-  const char *horario_inicial = obj["horario_inicial"];
-  const char *horario_final = obj["horario_final"];
-  const char *tag = obj["tag"];
-  int acesso = obj["acesso"];
-  const char *sala = obj["sala"];
-  const char *data_atual = obj["data_atual"];
-  const char *hora_atual = obj["hora_atual"];
-  // String hora_antes = hora_atual;
-  //Serial.println("hora atual antes validação:" + hora_antes);
-  //Serial.println("hora atual depois validação:" + hora);
+  int acende = obj["acende"];
 
-
-  if (acesso == 1 && strcmp(data,data_atual) == 0 && strcmp(hora_atual,horario_inicial) == 0){
+  if (acende == 1){
     delay(500);
     Serial.println('ligando acesso 1');
-    Hora = parse();
-    while (strcmp(Hora.hora,horario_final) == 0){// acesso full
+    int Hora = parse(tag);
+    while (Hora == 1){// acesso full
 
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, HIGH);
-      if (strcmp(Hora.hora,horario_final) > 0){
+      if (Hora == 0){
         digitalWrite(rele1, LOW);
         digitalWrite(rele2, LOW);
         break;
       }
       delay(60000); //1 minutos para cada requisicao
-      Hora = parse();
+      Hora = parse(tag);
     }
     delay(500);
   }
 
-  else if (acesso == 0 && strcmp(data,data_atual) == 0 && strcmp(hora_atual,horario_inicial) == 0)
+  else if (acende == 0)
   {
     delay(500);
     Serial.println('ligando acesso 0');
-    Hora = parse();
-    while (strcmp(Hora.hora,horario_final) == 0)
+    int Hora = parse(tag);
+    while (Hora == 1)
     {
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, LOW);
-      if (strcmp(Hora.hora,horario_final) >0){
+      if (Hora == 0){
         digitalWrite(rele1, LOW);
         digitalWrite(rele2, LOW);
         break;
       }
       delay(60000); //1 minutos
-      Hora = parse();
+      Hora = parse(tag);
     }
     delay(500);
   }
@@ -322,15 +301,15 @@ void httpGetAgendamento(String path)
   }
 }
 
-hora parse(){ //parse hora
-  hora P;
-  String obj = Get("hora");
+int parse(String tag){ //parse hora
+  String obj = Get("hora?" + tag);
   const size_t size = JSON_OBJECT_SIZE(1) + 20;
   DynamicJsonDocument document(size);
   deserializeJson(document, obj);
+  Serial.println(obj);
   JsonObject obj3 = document.as<JsonObject>();
-  P.hora = obj3["hora"];
-  return P;
+  int liga = obj3["liga"];
+  return liga;
 }
 
 String Get(String path)

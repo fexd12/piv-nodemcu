@@ -10,10 +10,10 @@
 #define RST_PIN 22 // pin rfid
 #define SS_PIN 21  // pin rfid
 
-#define rele1 26
-#define rele2 27
+int rele1 = 26;
+int rele2 = 27;
 
-String BASE_URL = "http://35.247.255.32:3000/";
+String BASE_URL = "http://192.168.0.28:3000/";
 
 char *ssid = "Fe";
 const char *password = "q1w2e3r4t5";
@@ -42,6 +42,8 @@ void setup()
   mfrc522.PCD_Init(); // Init MFRC522 card
   pinMode(rele1, OUTPUT);
   pinMode(rele2, OUTPUT);
+  digitalWrite(rele1,HIGH);
+  digitalWrite(rele2,HIGH);
 
   //for wifi
   Serial.print("Connecting to ");
@@ -247,7 +249,7 @@ void httpGetAgendamento(String tag)
   // Parse JSON object
   deserializeJson(doc, dados);
   JsonObject obj = doc.as<JsonObject>();
-
+  
   // if (error)
   // {
   //   Serial.print(F("deserializeJson() failed: "));
@@ -259,19 +261,19 @@ void httpGetAgendamento(String tag)
 
   if (acende == 1){
     delay(500);
-    Serial.println('ligando acesso 1');
+    Serial.println("ligando acesso 1");
     int Hora = parse(tag);
     while (Hora == 1){// acesso full
 
-      digitalWrite(rele1, HIGH);
-      digitalWrite(rele2, HIGH);
-      if (Hora == 0){
-        digitalWrite(rele1, LOW);
-        digitalWrite(rele2, LOW);
-        break;
-      }
+      digitalWrite(rele1, LOW);
+      digitalWrite(rele2, LOW);
       delay(60000); //1 minutos para cada requisicao
       Hora = parse(tag);
+    }
+    if (Hora == 0){
+      digitalWrite(rele1, HIGH);
+      digitalWrite(rele2, HIGH);
+      Serial.println("desligando acesso 1");
     }
     delay(500);
   }
@@ -279,19 +281,19 @@ void httpGetAgendamento(String tag)
   else if (acende == 0)
   {
     delay(500);
-    Serial.println('ligando acesso 0');
+    Serial.println("ligando acesso 0");
     int Hora = parse(tag);
     while (Hora == 1)
     {
       digitalWrite(rele1, HIGH);
       digitalWrite(rele2, LOW);
-      if (Hora == 0){
-        digitalWrite(rele1, LOW);
-        digitalWrite(rele2, LOW);
-        break;
-      }
       delay(60000); //1 minutos
       Hora = parse(tag);
+    }
+    if (Hora == 0){
+      digitalWrite(rele1, HIGH);
+      digitalWrite(rele2, HIGH);
+      Serial.println("desligando acesso 1");
     }
     delay(500);
   }
@@ -306,9 +308,10 @@ int parse(String tag){ //parse hora
   const size_t size = JSON_OBJECT_SIZE(1) + 20;
   DynamicJsonDocument document(size);
   deserializeJson(document, obj);
-  Serial.println(obj);
+  //Serial.println(obj);
   JsonObject obj3 = document.as<JsonObject>();
   int liga = obj3["liga"];
+  Serial.println(liga);
   return liga;
 }
 
